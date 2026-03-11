@@ -366,7 +366,38 @@ local function findNearestStealPrompt()
 			local part = getPromptPart(desc)
 			if part then
 				local dist = (root.Position - part.Position).Magnitude
-				if dist < bestDist then bestDist = dist; bestPrompt = desc end
+				if dist < bestDist then bestDist = dist; bestPrompt = desc endlocal instaGrabConn = nil
+
+local function startInstaGrab()
+	if instaGrabConn then
+		task.cancel(instaGrabConn)
+	end
+
+	instaGrabConn = task.spawn(function()
+		while instaGrabEnabled do
+			local prompt = findNearestStealPrompt()
+
+			if prompt then
+				pcall(function()
+					prompt.HoldDuration = 0
+					prompt.MaxActivationDistance = 9e9
+					prompt.RequiresLineOfSight = false
+
+					fireproximityprompt(prompt, 0)
+				end)
+			end
+
+			task.wait(0.01)
+		end
+
+		instaGrabConn = nil
+	end)
+end
+
+local function stopInstaGrab()
+	instaGrabEnabled = false
+	instaGrabConn = nil
+end
 			end
 		end
 	end
